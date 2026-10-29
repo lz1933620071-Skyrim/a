@@ -256,12 +256,39 @@ const SAR_OPTS = {
   r7:{label:"7 位", opts:[["Cl","Cl"],["NO2","NO₂"],["H","H"]]},
   r2:{label:"2′ 位", opts:[["H","H"],["Cl","Cl"],["F","F"]]}
 };
-/* 以下组合经 RDKit 规范化 SMILES 比对，与对应化合物的 PubChem 结构一致（去甲地西泮 CID 2997、替马西泮 CID 5391、奥沙西泮 CID 4616 同样经 InChIKey 核对） */
+/* 值为本页药物 id 的组合，经 RDKit 规范化 SMILES 比对与该药 PubChem 结构一致。
+   其余通用名：由 RDKit 计算该组合的 InChIKey，与公开数据库中该名称的 InChIKey 逐一核对一致
+   （去甲地西泮 CID 2997、替马西泮 CID 5391、奥沙西泮 CID 4616 另经 PubChem 记录核对）。 */
 const SAR_KNOWN = {
-  "bzd|H|H|Cl|H":"去甲地西泮（地西泮的活性代谢物）", "bzd|H|H|NO2|Cl":"clonazepam", "bzd|H|OH|Cl|H":"奥沙西泮（地西泮的终末活性代谢物）",
-  "bzd|H|OH|Cl|Cl":"lorazepam", "bzd|Me|H|Cl|H":"diazepam", "bzd|Me|OH|Cl|H":"替马西泮（地西泮的活性代谢物）",
-  "tri|-|-|Cl|H":"alprazolam", "tri|-|-|Cl|Cl":"triazolam"
+  "bzd|H|H|NO2|Cl":"clonazepam", "bzd|H|OH|Cl|Cl":"lorazepam", "bzd|Me|H|Cl|H":"diazepam",
+  "tri|-|-|Cl|H":"alprazolam", "tri|-|-|Cl|Cl":"triazolam",
+  "bzd|H|H|Cl|H":"去甲地西泮（nordazepam，地西泮的活性代谢物）",       // AKPLHCDWDRPJGD-UHFFFAOYSA-N
+  "bzd|H|OH|Cl|H":"奥沙西泮（oxazepam，地西泮的终末活性代谢物）",       // ADIMAYPTOBDMTL-UHFFFAOYSA-N
+  "bzd|Me|OH|Cl|H":"替马西泮（temazepam，地西泮的活性代谢物）",         // SEQDDYPDSLOBDC-UHFFFAOYSA-N
+  "bzd|H|H|Cl|Cl":"地洛西泮（delorazepam）",                            // CHIFCDOIPRCHCF-UHFFFAOYSA-N
+  "bzd|H|H|Cl|F":"去甲氟地西泮（norfludiazepam）",                      // UVCOILFBWYKHHB-UHFFFAOYSA-N
+  "bzd|H|H|NO2|H":"硝西泮（nitrazepam）",                               // KJONHKAYOJNZEC-UHFFFAOYSA-N
+  "bzd|H|H|NO2|F":"去甲氟硝西泮（fonazepam）",                          // KNGIGRDYBQPXKQ-UHFFFAOYSA-N
+  "bzd|H|OH|NO2|F":"尼福西泮（nifoxipam）",                             // UHFIFTRHLBAWGY-UHFFFAOYSA-N
+  "bzd|Me|H|Cl|Cl":"二氯西泮（diclazepam）",                            // VPAYQWRBBOGGPY-UHFFFAOYSA-N
+  "bzd|Me|H|Cl|F":"氟地西泮（fludiazepam）",                            // ROYOYTLGDLIGBX-UHFFFAOYSA-N
+  "bzd|Me|H|NO2|H":"尼美西泮（nimetazepam）",                           // GWUSZQUVEVMBPI-UHFFFAOYSA-N
+  "bzd|Me|H|NO2|Cl":"甲基氯硝西泮（methylclonazepam，Ro 05-4082）",     // AZVBJJDUDXZLTM-UHFFFAOYSA-N
+  "bzd|Me|H|NO2|F":"氟硝西泮（flunitrazepam）",                         // PPTYJKAXVCCBDU-UHFFFAOYSA-N
+  "bzd|Me|OH|Cl|Cl":"氯甲西泮（lormetazepam）",                         // FJIKWRGCXUCUIG-UHFFFAOYSA-N
+  "bzd|Me|OH|NO2|F":"3-羟基氟硝西泮（3-hydroxyflunitrazepam，氟硝西泮代谢物）", // KJTUBZKMFRILQD-UHFFFAOYSA-N
+  "tri|-|-|Cl|F":"氟阿普唑仑（flualprazolam）",                          // MPZVLJCMGPYWQQ-UHFFFAOYSA-N
+  "tri|-|-|NO2|H":"硝唑仑（nitrazolam）",                                // OYRPNABWTHDOFK-UHFFFAOYSA-N
+  "tri|-|-|NO2|Cl":"氯硝唑仑（clonazolam）",                             // XJRGLCAWBRZUFC-UHFFFAOYSA-N
+  "tri|-|-|NO2|F":"氟硝唑仑（flunitrazolam）"                            // RDLAGIOILLWVTM-UHFFFAOYSA-N
 };
+/* 由取代基生成的系统名 */
+function sarSysName(s){
+  const ph = {H:"苯基", Cl:"(2-氯苯基)", F:"(2-氟苯基)"}[s.r2];
+  const x = {Cl:"氯-", NO2:"硝基-", H:""}[s.r7];
+  if (s.ring === "tri") return `${x ? "8-" + x : ""}1-甲基-6-${ph}-4H-[1,2,4]三唑并[4,3-a][1,4]苯二氮䓬`;
+  return `${x ? "7-" + x : ""}5-${ph}-${s.c3 === "OH" ? "3-羟基-" : ""}${s.n1 === "Me" ? "1-甲基-" : ""}1,3-二氢-2H-1,4-苯二氮䓬-2-酮`;
+}
 function sarSmiles(s){
   const r7 = {Cl:"(Cl)", NO2:"([N+](=O)[O-])", H:""}[s.r7];
   const ph = "c3ccccc3" + {H:"", Cl:"Cl", F:"F"}[s.r2];
@@ -300,6 +327,7 @@ const REFS = {
   "p-ambien":{cf:"ok", t:"Ambien（唑吡坦）说明书：平均消除半衰期约 2.5 h。", url:"https://medlibrary.org/lib/rx/meds/ambien-1/page/5/"},
   "p-niaaa":{cf:"ok", t:"NIAAA：乙醇经 ADH 氧化为乙醛，再经 ALDH 氧化为乙酸；大量饮酒时 CYP2E1 参与。", url:"https://www.niaaa.nih.gov/publications/alcohol-metabolism"},
   /* 构效关系 */
+  "sar-names":{cf:"sec", t:"构效实验台中本页未收录化合物的通用名：由 RDKit 计算组合结构的 InChIKey，与 NCATS、ChEBI、SpectraBase、T3DB、Merck Index 等数据库中该名称的 InChIKey 逐一核对一致（经搜索摘录）。系统名由取代基按命名规则生成。", url:"https://drugs.ncats.io/"},
   "sar-bzd":{cf:"sec", t:"BZD 构效关系：7 位与 2′ 位的卤素等吸电子取代增加受体亲和力，其他芳环位置的卤素降低亲和力（药物化学教材及综述，经搜索摘录）。"},
   "sar-barb":{cf:"sec", t:"巴比妥类构效关系综述（Current Pharmaceutical Design）：C5 双取代决定脂溶性与作用时长；log P 与半衰期相关性差。", url:"https://www.benthamscience.com/article/66259"},
   "sar-thio":{cf:"sec", t:"硫代巴比妥类脂溶性高于相应含氧类似物（药物化学讲义，经搜索摘录）。"},
@@ -381,7 +409,7 @@ const REFS = {
 };
 const REF_LISTS = {
   home:["h-unodc","h-erowid","h-wood","h-garfield","h-uj","h-zdrug","h-fda2019","c-fda2020","c-ambienwd","c-barbwd","m-sigel","m-chiara","m-open","m-katzung","m-crestani","m-delta","p-niaaa","h-sezaby","h-klon-ind","h-cmaj"],
-  structure:["s-pcl","s-other","s-3d","sar-bzd","sar-barb","sar-thio","sar-ba","p-valium","p-ativan","p-klon","p-nat2","p-halcion","p-xanax","p-pheno","p-nembutal","p-thio","p-lunesta","p-ambien","m-crestani","m-zopi","p-niaaa","m-lovinger"],
+  structure:["s-pcl","s-other","s-3d","sar-names","sar-bzd","sar-barb","sar-thio","sar-ba","p-valium","p-ativan","p-klon","p-nat2","p-halcion","p-xanax","p-pheno","p-nembutal","p-thio","p-lunesta","p-ambien","m-crestani","m-zopi","p-niaaa","m-lovinger"],
   mechanism:["m-sigel","m-chiara","m-cryo","m-open","m-delta","m-rudolph","m-mohler","m-crestani","m-zopi","m-a46","m-ampa","m-nardou","m-acnp","m-lovinger","m-gly","m-5ht3","m-katzung"],
   pk:["p-xanax","k-xanaxddi","p-valium","k-valold","p-ativan","k-lorhep","k-glucir","p-klon","k-klonhep","p-nat2","p-halcion","k-ketotri","p-ambien","k-ambienddi","k-zolp","k-zopi","p-zopimet","p-lunesta","k-lunestaddi","k-tmax","p-pheno","k-phenoonset","h-sezaby","k-phenoint","p-nembutal","k-wikem","p-seconal","k-dea","p-thio","k-thio","p-niaaa","k-zakhari","k-mayo","k-drink","k-aldh2"],
   clinical:["c-xanaxind","c-lorazinj","c-nembind","h-sezaby","c-seconal","h-wood","c-indsec","c-fda2020","c-fda2020b","c-barbwd","c-ambienwd","c-aafp","c-asam","h-fda2019","c-beers","k-valold","c-mhra","c-ashton","c-asamtab","c-sps","c-wikieq","c-fda2016","c-elife","c-oirdsites","c-opbzd","m-acnp","m-lovinger","h-cmaj"]
@@ -708,8 +736,9 @@ function renderSar(){
   drawMol($("#svg-sar"), smi);
   const m = $("#sar-match");
   if (known && DRUG[known]) m.innerHTML = `这个组合就是 <b class="t-bzd">${drugLabel(DRUG[known])}</b>。<button class="linkbtn" id="sar-go">设为当前药物</button>`;
-  else if (known) m.innerHTML = `这个组合是 <b class="t-bzd">${known}</b>。`;
-  else m.innerHTML = `<span class="muted">非本页收录的组合，仅作构效示意。</span>`;
+  else m.innerHTML = `<span class="muted">非本页收录的组合，仅作构效示意。</span><br>`
+    + (known ? `名称：<b class="t-bzd">${known}</b>${cfSup("sec")}<br>` : `名称：<span class="muted">未找到通用名</span><br>`)
+    + `<span class="note">系统名：${sarSysName(s)}</span>`;
   const go = $("#sar-go"); if (go) go.addEventListener("click", () => setDrug(known));
   $("#sar-effects").innerHTML = sarEffects(s).map(x => `<li>${x}</li>`).join("");
   $("#sar-smiles").textContent = "生成的 SMILES：" + smi;
