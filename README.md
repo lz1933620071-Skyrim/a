@@ -33,10 +33,12 @@ GABA 能镇静催眠药物的交互式教学页面，面向药学、医学学习
 
 ## 文件
 
-- `gaba-sedatives.html`：完整页面，单个 HTML 文件，SmilesDrawer 与 3Dmol.js 通过 jsDelivr CDN 加载。
+- `gaba-sedatives.html`：页面结构（HTML），引用下面两个文件；SmilesDrawer 与 3Dmol.js 通过 jsDelivr CDN 加载。
+- `style.css`：页面样式（含浅色 / 深色主题）。
+- `script.js`：全部数据与交互逻辑（药物数据、分子绘制、各模块图表与模拟、参考来源）。
 - `index.html`：跳转到上述页面，供 GitHub Pages 根地址使用。
 
-本地查看时直接用浏览器打开 `gaba-sedatives.html` 即可（需联网加载 CDN 库与字体）。
+CSS 与 JS 原本内嵌在 `gaba-sedatives.html` 中，现已拆分为独立文件，内容不变。三个文件需放在同一目录。本地查看时用浏览器打开 `gaba-sedatives.html` 即可（需联网加载 CDN 库与字体）。
 
 ## 声明
 
